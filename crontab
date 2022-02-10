@@ -1,0 +1,1 @@
+30 12 * * * python /usr/src/app/crwal.py

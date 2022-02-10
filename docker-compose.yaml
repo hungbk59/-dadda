@@ -1,0 +1,62 @@
+version: '3'
+
+volumes:
+  db_data:
+
+networks:
+  network:
+    driver: bridge
+
+services:
+  db:
+    image: mysql:latest
+    container_name: sqlvnx
+    environment:
+      - MYSQL_DATABASE=news
+      - MYSQL_ROOT_PASSWORD=abc123
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=abc123
+    ports:
+      - 3307:3306
+    networks:
+      - network
+    volumes:
+      - ./db_data:/var/lib/mysql
+    restart: always
+
+  redis:
+    container_name: cache
+    build:
+      dockerfile: Dockerfile
+      context: ./server/redis/
+    command: redis-server
+    ports:
+    - 6379:6379
+    networks:
+      - network
+    restart: always
+
+  web:
+    container_name: vnx-server
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    networks:
+      - network
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+    restart: always
+
+  nginx:
+    container_name: nginx
+    build:
+      dockerfile: Dockerfile
+      context: ./server/nginx/
+    ports:
+     - 80:80
+    networks:
+      - network
+    depends_on:
+      - db
